@@ -3,61 +3,130 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Wall Area & Paint Estimator</title>
+  <title>Wall Area Estimator</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="styles.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
 </head>
-
-<body id="appBackground" class="min-h-screen flex items-center justify-center background-smooth transition-all duration-500 dark:bg-gray-900">
-
-  <div class="bg-white bg-opacity-80 dark:bg-gray-800 rounded-2xl p-8 shadow-2xl w-full max-w-md space-y-6">
-    <h1 class="text-2xl font-bold text-center mb-6 dark:text-white">Wall Area & Paint Estimator</h1>
+<body class="bg-gray-100 dark:bg-gray-900 flex items-center justify-center min-h-screen p-4 transition-colors duration-300">
+  <div class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 max-w-md w-full space-y-6">
+    <div class="flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Wall Area Estimator</h1>
+      <button onclick="toggleDarkMode()" class="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full p-2 hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+        🌙
+      </button>
+    </div>
 
     <div class="space-y-4">
       <div>
-        <label class="block text-sm font-medium dark:text-gray-200">Total Floor Area (sq ft):</label>
-        <input type="number" id="floorArea" class="w-full mt-1 p-2 border rounded dark:bg-gray-700 dark:text-white" placeholder="Enter total floor area">
+        <label class="block text-gray-700 dark:text-gray-300 mb-1">Room Quantity</label>
+        <input id="roomQuantity" type="number" min="1" class="w-full border rounded-lg p-2 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="e.g., 2 rooms" oninput="liveUpdate()">
       </div>
 
       <div>
-        <label class="block text-sm font-medium dark:text-gray-200">Ceiling Height (ft):</label>
-        <input type="number" id="ceilingHeight" class="w-full mt-1 p-2 border rounded dark:bg-gray-700 dark:text-white" placeholder="Enter ceiling height">
+        <label class="block text-gray-700 dark:text-gray-300 mb-1">Total Floor Area (sq ft)</label>
+        <input id="floorArea" type="number" min="0" step="any" class="w-full border rounded-lg p-2 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="e.g., 1000" oninput="liveUpdate()">
       </div>
 
       <div>
-        <label class="block text-sm font-medium dark:text-gray-200">Number of Rooms:</label>
-        <input type="number" id="numRooms" class="w-full mt-1 p-2 border rounded dark:bg-gray-700 dark:text-white" placeholder="Enter number of rooms">
+        <label class="block text-gray-700 dark:text-gray-300 mb-1">Ceiling Height (ft)</label>
+        <input id="ceilingHeight" type="number" min="0" step="any" class="w-full border rounded-lg p-2 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="e.g., 9" oninput="liveUpdate()">
       </div>
 
       <div>
-        <label class="block text-sm font-medium dark:text-gray-200">Wall Texture:</label>
-        <select id="texture" onchange="updateCoverage()" class="w-full mt-1 p-2 border rounded dark:bg-gray-700 dark:text-white">
-          <option value="smooth">Smooth</option>
-          <option value="orangePeel">Orange Peel</option>
-          <option value="knockdown">Knockdown</option>
-          <option value="popcorn">Popcorn</option>
-          <option value="masonry">Masonry</option>
-          <option value="stucco">Stucco</option>
+        <label class="block text-gray-700 dark:text-gray-300 mb-1">Wall Texture Type</label>
+        <select id="textureSelect" class="w-full border rounded-lg p-2 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" onchange="liveUpdate()">
+          <option value="400">Smooth (400 sq ft/gal)</option>
+          <option value="350">Knockdown (350 sq ft/gal)</option>
+          <option value="325">Orange Peel (325 sq ft/gal)</option>
+          <option value="300">Popcorn (300 sq ft/gal)</option>
+          <option value="275">Masonry (275 sq ft/gal)</option>
+          <option value="250">Stucco (250 sq ft/gal)</option>
         </select>
+        <div class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          <span>Selected Coverage: <span id="coveragePerGallon">400</span> sq ft/gallon</span>
+        </div>
       </div>
 
-      <div class="flex items-center space-x-4">
-        <button onclick="calculateArea()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded">Calculate</button>
-        <button onclick="resetForm()" class="flex-1 bg-gray-400 hover:bg-gray-500 text-white p-2 rounded">Reset</button>
+      <div class="flex space-x-4 mt-4">
+        <button onclick="calculateWallArea()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg py-2">
+          Calculate
+        </button>
+        <button onclick="resetForm()" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg py-2">
+          Reset
+        </button>
       </div>
 
-      <div class="mt-6 text-center space-y-2">
-        <p id="wallAreaResult" class="text-lg font-semibold dark:text-white"></p>
-        <p id="paintNeededResult" class="text-lg font-semibold dark:text-white"></p>
-        <p id="coverageResult" class="text-md text-gray-500 dark:text-gray-300"></p>
-      </div>
-
-      <div class="text-center">
-        <button onclick="toggleDarkMode()" class="text-sm underline dark:text-white">Toggle Dark Mode</button>
-      </div>
+      <div id="result" class="text-center text-lg font-semibold text-green-600 dark:text-green-400 mt-4"></div>
+      <div id="paintEstimate" class="text-center text-lg font-semibold text-yellow-500 dark:text-yellow-300 mt-4"></div>
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    if (!localStorage.getItem('darkMode')) {
+      document.documentElement.classList.add('dark');
+    }
+
+    function toggleDarkMode() {
+      const darkModeEnabled = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('darkMode', darkModeEnabled ? 'enabled' : 'disabled');
+    }
+
+    function calculateWallArea() {
+      const floorArea = parseFloat(document.getElementById('floorArea').value);
+      const ceilingHeight = parseFloat(document.getElementById('ceilingHeight').value);
+      const roomQuantity = parseInt(document.getElementById('roomQuantity').value);
+      const coveragePerGallon = parseFloat(document.getElementById('textureSelect').value);
+      const resultDiv = document.getElementById('result');
+      const paintEstimateDiv = document.getElementById('paintEstimate');
+
+      if (isNaN(floorArea) || isNaN(ceilingHeight) || isNaN(roomQuantity) || floorArea <= 0 || ceilingHeight <= 0 || roomQuantity <= 0) {
+        resultDiv.textContent = "Please enter valid positive numbers.";
+        resultDiv.classList.add('text-red-600', 'dark:text-red-400');
+        resultDiv.classList.remove('text-green-600', 'dark:text-green-400');
+        paintEstimateDiv.textContent = "";
+        return;
+      }
+
+      const floorAreaPerRoom = floorArea / roomQuantity;
+      const estimatedWallAreaPerRoom = 4 * ceilingHeight * Math.sqrt(floorAreaPerRoom);
+      const totalWallArea = estimatedWallAreaPerRoom * roomQuantity;
+      const paintNeeded = Math.ceil(totalWallArea / coveragePerGallon);
+
+      resultDiv.classList.remove('text-red-600', 'dark:text-red-400');
+      resultDiv.classList.add('text-green-600', 'dark:text-green-400');
+      resultDiv.textContent = `Estimated Wall Area: ${totalWallArea.toFixed(2)} sq ft`;
+
+      paintEstimateDiv.textContent = `Estimated Paint Needed: ${paintNeeded} gallon(s)`;
+    }
+
+    function liveUpdate() {
+      const floorArea = parseFloat(document.getElementById('floorArea').value);
+      const ceilingHeight = parseFloat(document.getElementById('ceilingHeight').value);
+      const roomQuantity = parseInt(document.getElementById('roomQuantity').value);
+      const coveragePerGallon = parseFloat(document.getElementById('textureSelect').value);
+
+      document.getElementById('coveragePerGallon').textContent = coveragePerGallon;
+
+      if (!isNaN(floorArea) && floorArea > 0 && 
+          !isNaN(ceilingHeight) && ceilingHeight > 0 && 
+          !isNaN(roomQuantity) && roomQuantity > 0) {
+        calculateWallArea();
+      }
+    }
+
+    function resetForm() {
+      document.getElementById('floorArea').value = '';
+      document.getElementById('ceilingHeight').value = '';
+      document.getElementById('roomQuantity').value = '';
+      document.getElementById('textureSelect').value = '400';
+      document.getElementById('coveragePerGallon').textContent = '400';
+      document.getElementById('result').textContent = '';
+      document.getElementById('paintEstimate').textContent = '';
+    }
+  </script>
 </body>
 </html>
