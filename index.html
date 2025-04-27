@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class',
+      darkMode: 'class', // Enable dark mode class-based
     }
   </script>
 </head>
@@ -65,7 +65,12 @@
   </div>
 
   <script>
-    // Function to update the texture value display
+    // Default dark mode on page load
+    if (!localStorage.getItem('darkMode')) {
+      document.documentElement.classList.add('dark');
+    }
+
+    // Function to update the texture value display and coverage
     function updateTextureValue() {
       const textureValue = document.getElementById('textureSlider').value;
       const coveragePerGallon = 400 - (textureValue - 1) * 20; // Adjust coverage between 400 and 200 sq ft per gallon
@@ -118,7 +123,8 @@
     }
 
     function toggleDarkMode() {
-      document.documentElement.classList.toggle('dark');
+      const darkModeEnabled = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('darkMode', darkModeEnabled ? 'enabled' : 'disabled');
     }
   </script>
 </body>
