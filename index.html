@@ -37,17 +37,16 @@
       </div>
 
       <div>
-        <label class="block text-gray-700 dark:text-gray-300 mb-1">Wall Texture Type</label>
-        <select id="textureSelect" class="w-full border rounded-lg p-2 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" onchange="liveUpdate()">
-          <option value="400">Smooth (400 sq ft/gal)</option>
-          <option value="350">Knockdown (350 sq ft/gal)</option>
-          <option value="325">Orange Peel (325 sq ft/gal)</option>
-          <option value="300">Popcorn (300 sq ft/gal)</option>
-          <option value="275">Masonry (275 sq ft/gal)</option>
-          <option value="250">Stucco (250 sq ft/gal)</option>
-        </select>
+        <label class="block text-gray-700 dark:text-gray-300 mb-1">Wall Texture (1 = Smooth, 10 = Textured)</label>
+        <input id="textureSlider" type="range" min="1" max="10" value="1" class="w-full h-2 bg-blue-500 rounded-full" onchange="updateTextureValue(); liveUpdate();" oninput="updateTextureValue(); liveUpdate();">
+        <div id="textureDescriptions" class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mt-2">
+          <span>Smooth</span>
+          <span>Medium</span>
+          <span>Highly Textured</span>
+        </div>
+        <span id="textureValue" class="text-gray-900 dark:text-white font-semibold">Smooth (1)</span>
         <div class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          <span>Selected Coverage: <span id="coveragePerGallon">400</span> sq ft/gallon</span>
+          <span>Average Coverage: <span id="coveragePerGallon">400</span> sq ft/gallon</span>
         </div>
       </div>
 
@@ -75,11 +74,18 @@
       localStorage.setItem('darkMode', darkModeEnabled ? 'enabled' : 'disabled');
     }
 
+    function updateTextureValue() {
+      const textureValue = document.getElementById('textureSlider').value;
+      const coveragePerGallon = 400 - (textureValue - 1) * (150/9); // Now 400 to 250 range
+      document.getElementById('textureValue').textContent = `${textureValue === "1" ? "Smooth" : textureValue <= "5" ? "Medium" : "Highly Textured"} (${textureValue})`;
+      document.getElementById('coveragePerGallon').textContent = coveragePerGallon.toFixed(0);
+    }
+
     function calculateWallArea() {
       const floorArea = parseFloat(document.getElementById('floorArea').value);
       const ceilingHeight = parseFloat(document.getElementById('ceilingHeight').value);
       const roomQuantity = parseInt(document.getElementById('roomQuantity').value);
-      const coveragePerGallon = parseFloat(document.getElementById('textureSelect').value);
+      const textureLevel = parseInt(document.getElementById('textureSlider').value);
       const resultDiv = document.getElementById('result');
       const paintEstimateDiv = document.getElementById('paintEstimate');
 
@@ -94,6 +100,8 @@
       const floorAreaPerRoom = floorArea / roomQuantity;
       const estimatedWallAreaPerRoom = 4 * ceilingHeight * Math.sqrt(floorAreaPerRoom);
       const totalWallArea = estimatedWallAreaPerRoom * roomQuantity;
+      const coveragePerGallon = 400 - (textureLevel - 1) * (150/9); // Adjusted
+
       const paintNeeded = Math.ceil(totalWallArea / coveragePerGallon);
 
       resultDiv.classList.remove('text-red-600', 'dark:text-red-400');
@@ -107,10 +115,8 @@
       const floorArea = parseFloat(document.getElementById('floorArea').value);
       const ceilingHeight = parseFloat(document.getElementById('ceilingHeight').value);
       const roomQuantity = parseInt(document.getElementById('roomQuantity').value);
-      const coveragePerGallon = parseFloat(document.getElementById('textureSelect').value);
 
-      document.getElementById('coveragePerGallon').textContent = coveragePerGallon;
-
+      // Only run calculation if all fields have valid inputs
       if (!isNaN(floorArea) && floorArea > 0 && 
           !isNaN(ceilingHeight) && ceilingHeight > 0 && 
           !isNaN(roomQuantity) && roomQuantity > 0) {
@@ -122,8 +128,9 @@
       document.getElementById('floorArea').value = '';
       document.getElementById('ceilingHeight').value = '';
       document.getElementById('roomQuantity').value = '';
-      document.getElementById('textureSelect').value = '400';
-      document.getElementById('coveragePerGallon').textContent = '400';
+      document.getElementById('textureSlider').value = 1;
+      document.getElementById('textureValue').textContent = "Smooth (1)";
+      document.getElementById('coveragePerGallon').textContent = "400";
       document.getElementById('result').textContent = '';
       document.getElementById('paintEstimate').textContent = '';
     }
