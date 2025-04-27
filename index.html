@@ -6,7 +6,6 @@
   <title>Wall Area Estimator</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    // Tailwind dark mode setup
     tailwind.config = {
       darkMode: 'class',
     }
@@ -23,6 +22,11 @@
 
     <div class="space-y-4">
       <div>
+        <label class="block text-gray-700 dark:text-gray-300 mb-1">Room Quantity</label>
+        <input id="roomQuantity" type="number" min="1" class="w-full border rounded-lg p-2 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="e.g., 2 rooms">
+      </div>
+
+      <div>
         <label class="block text-gray-700 dark:text-gray-300 mb-1">Total Floor Area (sq ft)</label>
         <input id="floorArea" type="number" min="0" step="any" class="w-full border rounded-lg p-2 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="e.g., 1000">
       </div>
@@ -30,6 +34,12 @@
       <div>
         <label class="block text-gray-700 dark:text-gray-300 mb-1">Ceiling Height (ft)</label>
         <input id="ceilingHeight" type="number" min="0" step="any" class="w-full border rounded-lg p-2 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="e.g., 9">
+      </div>
+
+      <div>
+        <label class="block text-gray-700 dark:text-gray-300 mb-1">Wall Texture (1 = Smooth, 10 = Textured)</label>
+        <input id="textureSlider" type="range" min="1" max="10" value="1" class="w-full" onchange="updateTextureValue()">
+        <span id="textureValue" class="text-gray-900 dark:text-white font-semibold">Smooth (1)</span>
       </div>
 
       <div class="flex space-x-4 mt-4">
@@ -42,34 +52,58 @@
       </div>
 
       <div id="result" class="text-center text-lg font-semibold text-green-600 dark:text-green-400 mt-4"></div>
+      <div id="paintEstimate" class="text-center text-lg font-semibold text-yellow-500 dark:text-yellow-300 mt-4"></div>
     </div>
   </div>
 
   <script>
+    // Function to update the texture value display
+    function updateTextureValue() {
+      const textureValue = document.getElementById('textureSlider').value;
+      document.getElementById('textureValue').textContent = `${textureValue === "1" ? "Smooth" : "Textured"} (${textureValue})`;
+    }
+
     function calculateWallArea() {
       const floorArea = parseFloat(document.getElementById('floorArea').value);
       const ceilingHeight = parseFloat(document.getElementById('ceilingHeight').value);
+      const roomQuantity = parseInt(document.getElementById('roomQuantity').value);
+      const textureLevel = parseInt(document.getElementById('textureSlider').value);
       const resultDiv = document.getElementById('result');
+      const paintEstimateDiv = document.getElementById('paintEstimate');
 
-      if (isNaN(floorArea) || isNaN(ceilingHeight) || floorArea <= 0 || ceilingHeight <= 0) {
+      if (isNaN(floorArea) || isNaN(ceilingHeight) || isNaN(roomQuantity) || floorArea <= 0 || ceilingHeight <= 0 || roomQuantity <= 0) {
         resultDiv.textContent = "Please enter valid positive numbers.";
         resultDiv.classList.add('text-red-600', 'dark:text-red-400');
         resultDiv.classList.remove('text-green-600', 'dark:text-green-400');
         return;
       }
 
-      const estimatedWallArea = 4 * ceilingHeight * Math.sqrt(floorArea);
+      const estimatedWallAreaPerRoom = 4 * ceilingHeight * Math.sqrt(floorArea);
+      const totalWallArea = estimatedWallAreaPerRoom * roomQuantity;
+
+      // Adjust coverage for texture
+      const baseCoverage = 350; // coverage for smooth walls
+      const coverageAdjustment = (11 - textureLevel) * 10; // Lower coverage as texture increases
+      const adjustedCoverage = baseCoverage - coverageAdjustment;
+
+      // Estimate paint in gallons (rounded up to nearest gallon)
+      const paintNeeded = Math.ceil(totalWallArea / adjustedCoverage);
 
       resultDiv.classList.remove('text-red-600', 'dark:text-red-400');
       resultDiv.classList.add('text-green-600', 'dark:text-green-400');
-      resultDiv.textContent = `Estimated Wall Area: ${estimatedWallArea.toFixed(2)} sq ft`;
+      resultDiv.textContent = `Estimated Wall Area: ${totalWallArea.toFixed(2)} sq ft`;
+
+      paintEstimateDiv.textContent = `Estimated Paint Needed: ${paintNeeded} gallon(s)`;
     }
 
     function resetForm() {
       document.getElementById('floorArea').value = '';
       document.getElementById('ceilingHeight').value = '';
-      const resultDiv = document.getElementById('result');
-      resultDiv.textContent = '';
+      document.getElementById('roomQuantity').value = '';
+      document.getElementById('textureSlider').value = 1;
+      document.getElementById('textureValue').textContent = "Smooth (1)";
+      document.getElementById('result').textContent = '';
+      document.getElementById('paintEstimate').textContent = '';
     }
 
     function toggleDarkMode() {
