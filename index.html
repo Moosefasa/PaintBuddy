@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wall Area Estimator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 flex items-center justify-center min-h-screen p-4 transition-colors duration-300">
+  <div class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 max-w-md w-full space-y-6">
+    <div class="flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Wall Area Estimator</h1>
+      <button onclick="toggleDarkMode()" class="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full p-2 hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+        🌙
+      </button>
+    </div>
+
+    <div class="space-y-4">
+      <div>
+        <label class="block text-gray-700 dark:text-gray-300 mb-1">Room Quantity</label>
+        <input id="roomQuantity" type="number" min="1" class="w-full border rounded-lg p-2 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="e.g., 2 rooms">
+      </div>
+
+      <div>
+        <label class="block text-gray-700 dark:text-gray-300 mb-1">Total Floor Area (sq ft)</label>
+        <input id="floorArea" type="number" min="0" step="any" class="w-full border rounded-lg p-2 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="e.g., 1000">
+      </div>
+
+      <div>
+        <label class="block text-gray-700 dark:text-gray-300 mb-1">Ceiling Height (ft)</label>
+        <input id="ceilingHeight" type="number" min="0" step="any" class="w-full border rounded-lg p-2 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="e.g., 9">
+      </div>
+
+      <div>
+        <label class="block text-gray-700 dark:text-gray-300 mb-1">Wall Texture (1 = Smooth, 10 = Textured)</label>
+        <input id="textureSlider" type="range" min="1" max="10" value="1" class="w-full h-2 bg-blue-500 rounded-full" onchange="updateTextureValue()">
+        <div id="textureDescriptions" class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mt-2">
+          <span>Smooth</span>
+          <span>Medium</span>
+          <span>Highly Textured</span>
+        </div>
+        <span id="textureValue" class="text-gray-900 dark:text-white font-semibold">Smooth (1)</span>
+        <div class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          <span>Average Coverage: <span id="coveragePerGallon">400</span> sq ft/gallon</span>
+        </div>
+      </div>
+
+      <div class="flex space-x-4 mt-4">
+        <button onclick="calculateWallArea()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg py-2">
+          Calculate
+        </button>
+        <button onclick="resetForm()" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg py-2">
+          Reset
+        </button>
+      </div>
+
+      <div id="result" class="text-center text-lg font-semibold text-green-600 dark:text-green-400 mt-4"></div>
+      <div id="paintEstimate" class="text-center text-lg font-semibold text-yellow-500 dark:text-yellow-300 mt-4"></div>
+    </div>
+  </div>
+
+  <script>
+    // Function to update the texture value display
+    function updateTextureValue() {
+      const textureValue = document.getElementById('textureSlider').value;
+      const coveragePerGallon = 400 - (textureValue - 1) * 20; // Adjust coverage between 400 and 200 sq ft per gallon
+      document.getElementById('textureValue').textContent = `${textureValue === "1" ? "Smooth" : textureValue <= "5" ? "Medium" : "Highly Textured"} (${textureValue})`;
+      document.getElementById('coveragePerGallon').textContent = coveragePerGallon.toFixed(0); // Update coverage per gallon
+    }
+
+    function calculateWallArea() {
+      const floorArea = parseFloat(document.getElementById('floorArea').value);
+      const ceilingHeight = parseFloat(document.getElementById('ceilingHeight').value);
+      const roomQuantity = parseInt(document.getElementById('roomQuantity').value);
+      const textureLevel = parseInt(document.getElementById('textureSlider').value);
+      const resultDiv = document.getElementById('result');
+      const paintEstimateDiv = document.getElementById('paintEstimate');
+
+      if (isNaN(floorArea) || isNaN(ceilingHeight) || isNaN(roomQuantity) || floorArea <= 0 || ceilingHeight <= 0 || roomQuantity <= 0) {
+        resultDiv.textContent = "Please enter valid positive numbers.";
+        resultDiv.classList.add('text-red-600', 'dark:text-red-400');
+        resultDiv.classList.remove('text-green-600', 'dark:text-green-400');
+        return;
+      }
+
+      // **Fix**: Divide total floor area by number of rooms to get area per room
+      const floorAreaPerRoom = floorArea / roomQuantity;
+      const estimatedWallAreaPerRoom = 4 * ceilingHeight * Math.sqrt(floorAreaPerRoom);
+      const totalWallArea = estimatedWallAreaPerRoom * roomQuantity;
+
+      // Get the coverage per gallon based on the slider
+      const coveragePerGallon = 400 - (textureLevel - 1) * 20; // Adjust coverage between 400 and 200 sq ft per gallon
+
+      // Estimate paint in gallons (rounded up to nearest gallon)
+      const paintNeeded = Math.ceil(totalWallArea / coveragePerGallon);
+
+      resultDiv.classList.remove('text-red-600', 'dark:text-red-400');
+      resultDiv.classList.add('text-green-600', 'dark:text-green-400');
+      resultDiv.textContent = `Estimated Wall Area: ${totalWallArea.toFixed(2)} sq ft`;
+
+      paintEstimateDiv.textContent = `Estimated Paint Needed: ${paintNeeded} gallon(s)`;
+    }
+
+    function resetForm() {
+      document.getElementById('floorArea').value = '';
+      document.getElementById('ceilingHeight').value = '';
+      document.getElementById('roomQuantity').value = '';
+      document.getElementById('textureSlider').value = 1;
+      document.getElementById('textureValue').textContent = "Smooth (1)";
+      document.getElementById('coveragePerGallon').textContent = "400";
+      document.getElementById('result').textContent = '';
+      document.getElementById('paintEstimate').textContent = '';
+    }
+
+    function toggleDarkMode() {
+      document.documentElement.classList.toggle('dark');
+    }
+  </script>
+</body>
+</html>
