@@ -46,7 +46,6 @@
           <option value="275">Masonry</option>
           <option value="250">Stucco</option>
         </select>
-        <div id="texturePreview" class="h-24 mt-4 rounded-lg bg-cover bg-center border dark:border-gray-600"></div>
         <div class="mt-2 text-sm text-gray-600 dark:text-gray-400">
           <span>Average Coverage: <span id="coveragePerGallon">400</span> sq ft/gallon</span>
         </div>
@@ -89,10 +88,6 @@
       const textureSelect = document.getElementById('textureSelect');
       const coverage = textureSelect.value;
       document.getElementById('coveragePerGallon').textContent = coverage;
-
-      const preview = document.getElementById('texturePreview');
-      preview.style.backgroundImage = textureBackgrounds[coverage] || "";
-      preview.style.backgroundSize = coverage == 400 ? "20px 20px" : "10px 10px";
     }
 
     function calculateWallArea() {
@@ -141,8 +136,6 @@
       document.getElementById('roomQuantity').value = '';
       document.getElementById('textureSelect').value = '400';
       document.getElementById('coveragePerGallon').textContent = '400';
-      document.getElementById('texturePreview').style.backgroundImage = textureBackgrounds["400"];
-      document.getElementById('texturePreview').style.backgroundSize = "20px 20px";
       document.getElementById('result').textContent = '';
       document.getElementById('paintEstimate').textContent = '';
     }
