@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class', // Enable dark mode class-based
+      darkMode: 'class',
     }
   </script>
 </head>
@@ -23,22 +23,22 @@
     <div class="space-y-4">
       <div>
         <label class="block text-gray-700 dark:text-gray-300 mb-1">Room Quantity</label>
-        <input id="roomQuantity" type="number" min="1" class="w-full border rounded-lg p-2 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="e.g., 2 rooms">
+        <input id="roomQuantity" type="number" min="1" class="w-full border rounded-lg p-2 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="e.g., 2 rooms" oninput="liveUpdate()">
       </div>
 
       <div>
         <label class="block text-gray-700 dark:text-gray-300 mb-1">Total Floor Area (sq ft)</label>
-        <input id="floorArea" type="number" min="0" step="any" class="w-full border rounded-lg p-2 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="e.g., 1000">
+        <input id="floorArea" type="number" min="0" step="any" class="w-full border rounded-lg p-2 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="e.g., 1000" oninput="liveUpdate()">
       </div>
 
       <div>
         <label class="block text-gray-700 dark:text-gray-300 mb-1">Ceiling Height (ft)</label>
-        <input id="ceilingHeight" type="number" min="0" step="any" class="w-full border rounded-lg p-2 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="e.g., 9">
+        <input id="ceilingHeight" type="number" min="0" step="any" class="w-full border rounded-lg p-2 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="e.g., 9" oninput="liveUpdate()">
       </div>
 
       <div>
         <label class="block text-gray-700 dark:text-gray-300 mb-1">Wall Texture (1 = Smooth, 10 = Textured)</label>
-        <input id="textureSlider" type="range" min="1" max="10" value="1" class="w-full h-2 bg-blue-500 rounded-full" onchange="updateTextureValue()">
+        <input id="textureSlider" type="range" min="1" max="10" value="1" class="w-full h-2 bg-blue-500 rounded-full" onchange="updateTextureValue(); liveUpdate();" oninput="updateTextureValue(); liveUpdate();">
         <div id="textureDescriptions" class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mt-2">
           <span>Smooth</span>
           <span>Medium</span>
@@ -65,17 +65,20 @@
   </div>
 
   <script>
-    // Set Dark Mode by default
     if (!localStorage.getItem('darkMode')) {
       document.documentElement.classList.add('dark');
     }
 
-    // Function to update the texture value display and coverage per gallon
+    function toggleDarkMode() {
+      const darkModeEnabled = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('darkMode', darkModeEnabled ? 'enabled' : 'disabled');
+    }
+
     function updateTextureValue() {
       const textureValue = document.getElementById('textureSlider').value;
-      const coveragePerGallon = 400 - (textureValue - 1) * 20; // Adjust coverage between 400 and 200 sq ft per gallon
+      const coveragePerGallon = 400 - (textureValue - 1) * (150/9); // Now 400 to 250 range
       document.getElementById('textureValue').textContent = `${textureValue === "1" ? "Smooth" : textureValue <= "5" ? "Medium" : "Highly Textured"} (${textureValue})`;
-      document.getElementById('coveragePerGallon').textContent = coveragePerGallon.toFixed(0); // Update coverage per gallon
+      document.getElementById('coveragePerGallon').textContent = coveragePerGallon.toFixed(0);
     }
 
     function calculateWallArea() {
@@ -90,18 +93,15 @@
         resultDiv.textContent = "Please enter valid positive numbers.";
         resultDiv.classList.add('text-red-600', 'dark:text-red-400');
         resultDiv.classList.remove('text-green-600', 'dark:text-green-400');
+        paintEstimateDiv.textContent = "";
         return;
       }
 
-      // **Fix**: Divide total floor area by number of rooms to get area per room
       const floorAreaPerRoom = floorArea / roomQuantity;
       const estimatedWallAreaPerRoom = 4 * ceilingHeight * Math.sqrt(floorAreaPerRoom);
       const totalWallArea = estimatedWallAreaPerRoom * roomQuantity;
+      const coveragePerGallon = 400 - (textureLevel - 1) * (150/9); // Adjusted
 
-      // Get the coverage per gallon based on the slider
-      const coveragePerGallon = 400 - (textureLevel - 1) * 20; // Adjust coverage between 400 and 200 sq ft per gallon
-
-      // Estimate paint in gallons (rounded up to nearest gallon)
       const paintNeeded = Math.ceil(totalWallArea / coveragePerGallon);
 
       resultDiv.classList.remove('text-red-600', 'dark:text-red-400');
@@ -109,6 +109,19 @@
       resultDiv.textContent = `Estimated Wall Area: ${totalWallArea.toFixed(2)} sq ft`;
 
       paintEstimateDiv.textContent = `Estimated Paint Needed: ${paintNeeded} gallon(s)`;
+    }
+
+    function liveUpdate() {
+      const floorArea = parseFloat(document.getElementById('floorArea').value);
+      const ceilingHeight = parseFloat(document.getElementById('ceilingHeight').value);
+      const roomQuantity = parseInt(document.getElementById('roomQuantity').value);
+
+      // Only run calculation if all fields have valid inputs
+      if (!isNaN(floorArea) && floorArea > 0 && 
+          !isNaN(ceilingHeight) && ceilingHeight > 0 && 
+          !isNaN(roomQuantity) && roomQuantity > 0) {
+        calculateWallArea();
+      }
     }
 
     function resetForm() {
@@ -120,11 +133,6 @@
       document.getElementById('coveragePerGallon').textContent = "400";
       document.getElementById('result').textContent = '';
       document.getElementById('paintEstimate').textContent = '';
-    }
-
-    function toggleDarkMode() {
-      const darkModeEnabled = document.documentElement.classList.toggle('dark');
-      localStorage.setItem('darkMode', darkModeEnabled ? 'enabled' : 'disabled');
     }
   </script>
 </body>
