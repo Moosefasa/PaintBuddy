@@ -38,7 +38,12 @@
 
       <div>
         <label class="block text-gray-700 dark:text-gray-300 mb-1">Wall Texture (1 = Smooth, 10 = Textured)</label>
-        <input id="textureSlider" type="range" min="1" max="10" value="1" class="w-full" onchange="updateTextureValue()">
+        <input id="textureSlider" type="range" min="1" max="10" value="1" class="w-full h-2 bg-blue-500 rounded-full" onchange="updateTextureValue()">
+        <div id="textureDescriptions" class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mt-2">
+          <span>Smooth</span>
+          <span>Medium</span>
+          <span>Highly Textured</span>
+        </div>
         <span id="textureValue" class="text-gray-900 dark:text-white font-semibold">Smooth (1)</span>
       </div>
 
@@ -60,7 +65,7 @@
     // Function to update the texture value display
     function updateTextureValue() {
       const textureValue = document.getElementById('textureSlider').value;
-      document.getElementById('textureValue').textContent = `${textureValue === "1" ? "Smooth" : "Textured"} (${textureValue})`;
+      document.getElementById('textureValue').textContent = `${textureValue === "1" ? "Smooth" : textureValue <= "5" ? "Medium" : "Highly Textured"} (${textureValue})`;
     }
 
     function calculateWallArea() {
@@ -78,7 +83,9 @@
         return;
       }
 
-      const estimatedWallAreaPerRoom = 4 * ceilingHeight * Math.sqrt(floorArea);
+      // **Fix**: Divide total floor area by number of rooms to get area per room
+      const floorAreaPerRoom = floorArea / roomQuantity;
+      const estimatedWallAreaPerRoom = 4 * ceilingHeight * Math.sqrt(floorAreaPerRoom);
       const totalWallArea = estimatedWallAreaPerRoom * roomQuantity;
 
       // Adjust coverage for texture
