@@ -65,12 +65,12 @@
   </div>
 
   <script>
-    // Default dark mode on page load
+    // Set Dark Mode by default
     if (!localStorage.getItem('darkMode')) {
       document.documentElement.classList.add('dark');
     }
 
-    // Function to update the texture value display and coverage
+    // Function to update the texture value display and coverage per gallon
     function updateTextureValue() {
       const textureValue = document.getElementById('textureSlider').value;
       const coveragePerGallon = 400 - (textureValue - 1) * 20; // Adjust coverage between 400 and 200 sq ft per gallon
