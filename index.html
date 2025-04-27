@@ -45,6 +45,9 @@
           <span>Highly Textured</span>
         </div>
         <span id="textureValue" class="text-gray-900 dark:text-white font-semibold">Smooth (1)</span>
+        <div class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          <span>Average Coverage: <span id="coveragePerGallon">400</span> sq ft/gallon</span>
+        </div>
       </div>
 
       <div class="flex space-x-4 mt-4">
@@ -65,7 +68,9 @@
     // Function to update the texture value display
     function updateTextureValue() {
       const textureValue = document.getElementById('textureSlider').value;
+      const coveragePerGallon = 400 - (textureValue - 1) * 20; // Adjust coverage between 400 and 200 sq ft per gallon
       document.getElementById('textureValue').textContent = `${textureValue === "1" ? "Smooth" : textureValue <= "5" ? "Medium" : "Highly Textured"} (${textureValue})`;
+      document.getElementById('coveragePerGallon').textContent = coveragePerGallon.toFixed(0); // Update coverage per gallon
     }
 
     function calculateWallArea() {
@@ -88,13 +93,11 @@
       const estimatedWallAreaPerRoom = 4 * ceilingHeight * Math.sqrt(floorAreaPerRoom);
       const totalWallArea = estimatedWallAreaPerRoom * roomQuantity;
 
-      // Adjust coverage for texture
-      const baseCoverage = 350; // coverage for smooth walls
-      const coverageAdjustment = (11 - textureLevel) * 10; // Lower coverage as texture increases
-      const adjustedCoverage = baseCoverage - coverageAdjustment;
+      // Get the coverage per gallon based on the slider
+      const coveragePerGallon = 400 - (textureLevel - 1) * 20; // Adjust coverage between 400 and 200 sq ft per gallon
 
       // Estimate paint in gallons (rounded up to nearest gallon)
-      const paintNeeded = Math.ceil(totalWallArea / adjustedCoverage);
+      const paintNeeded = Math.ceil(totalWallArea / coveragePerGallon);
 
       resultDiv.classList.remove('text-red-600', 'dark:text-red-400');
       resultDiv.classList.add('text-green-600', 'dark:text-green-400');
@@ -109,6 +112,7 @@
       document.getElementById('roomQuantity').value = '';
       document.getElementById('textureSlider').value = 1;
       document.getElementById('textureValue').textContent = "Smooth (1)";
+      document.getElementById('coveragePerGallon').textContent = "400";
       document.getElementById('result').textContent = '';
       document.getElementById('paintEstimate').textContent = '';
     }
