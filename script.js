@@ -68,5 +68,5 @@ function updateCoverage() {
 
 function updateBackground(textureType) {
   const app = document.getElementById('appBackground');
-  app.className = `min-h-screen flex items-center justify-center background-${textureType} transition-all duration-500`;
+  app.className = `min-h-screen flex items-center justify-center background-${textureType} transition-all duration-500 dark:bg-gray-900`;
 }
